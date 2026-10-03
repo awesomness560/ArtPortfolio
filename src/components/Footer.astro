@@ -1,0 +1,71 @@
+---
+import Brackets from './Brackets.astro';
+import { site } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer id="contact" class="container site-footer" transition:animation="none">
+  <div class="site-footer__frame">
+    <Brackets corners={['bl', 'br']} />
+    <div class="site-footer__main">
+      <p class="site-footer__line">Contact me.</p>
+      <ul class="site-footer__links">
+        <li><a class="link" href={`mailto:${site.email}`}>Email <span aria-hidden="true">↗</span></a></li>
+        <li>
+          <a class="link" href={site.xUrl} rel="me noopener" target="_blank">
+            X <span aria-hidden="true">↗</span><span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <p class="site-footer__copy">© {year} {site.name}. All rights reserved.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-9);
+  }
+  .site-footer__frame {
+    position: relative;
+    padding: var(--space-8) var(--space-5) var(--space-6);
+    border-top: var(--rule);
+  }
+  .site-footer__main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+  .site-footer__line {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 6vw, 4.25rem);
+    font-weight: 400;
+    line-height: 1.05;
+    max-width: 14ch;
+  }
+  .site-footer__links {
+    display: flex;
+    padding: 0;
+    list-style: none;
+  }
+  .site-footer__links li + li {
+    border-left: var(--rule);
+  }
+  .site-footer__links li {
+    padding-inline: var(--space-5);
+  }
+  .site-footer__links li:first-child {
+    padding-left: 0;
+  }
+  .site-footer__links li:last-child {
+    padding-right: 0;
+  }
+  .site-footer__copy {
+    margin-top: var(--space-7);
+    font-size: var(--text-small);
+    color: var(--color-muted);
+  }
+</style>

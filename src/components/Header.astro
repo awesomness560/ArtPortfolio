@@ -1,0 +1,54 @@
+---
+import { site } from '../data/site';
+
+const links = [
+  { href: '/#work', label: 'Work' },
+  { href: '/#about', label: 'About' },
+  { href: '/#contact', label: 'Contact' },
+];
+---
+
+<header class="site-header" transition:animation="none">
+  <div class="container site-header__inner">
+    <a class="logo" href="/" aria-label={`${site.name}, home`}>
+      {site.initials}<span class="accent">.</span>
+    </a>
+    <nav aria-label="Primary">
+      <ul>
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header__inner {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding-block: var(--space-5);
+    border-bottom: var(--rule);
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  ul {
+    display: flex;
+    gap: clamp(var(--space-4), 3vw, var(--space-6));
+    padding: 0;
+    list-style: none;
+  }
+  nav a {
+    font-size: var(--text-small);
+    letter-spacing: 0.04em;
+    transition: color var(--duration) var(--ease-out);
+  }
+  nav a:hover {
+    color: var(--color-accent);
+  }
+</style>

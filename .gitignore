@@ -15,10 +15,26 @@ pnpm-debug.log*
 
 # environment variables
 .env
-.env.production
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store
 
 # jetbrains setting folder
 .idea/
+
+# vercel cli
+.vercel/
+
+# os / editor clutter
+Thumbs.db
+*.swp
+
+# raw source clips (encoded copies live in public/projects)
+vidsRaw/
+
+# markdown: ignore everything except the README and the project content collection
+*.md
+!README.md
+!src/content/**/*.md

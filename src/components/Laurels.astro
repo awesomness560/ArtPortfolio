@@ -1,0 +1,95 @@
+---
+// Award laurels: a pair of mirrored branches around the award text.
+interface Props {
+  title: string;
+  event: string;
+}
+const { title, event } = Astro.props;
+
+// Leaves sit along a circular arc on the left side of the wreath.
+const cx = 40;
+const cy = 40;
+const r = 26;
+const leaves = Array.from({ length: 7 }, (_, i) => {
+  const deg = 115 + i * 21;
+  const rad = (deg * Math.PI) / 180;
+  const x = cx + r * Math.cos(rad);
+  const y = cy + r * Math.sin(rad);
+  const ox = Math.cos(rad) * 4;
+  const oy = Math.sin(rad) * 4;
+  return [
+    { x: x + ox, y: y + oy, rot: deg + 50 },
+    { x: x - ox * 0.6, y: y - oy * 0.6, rot: deg + 130 },
+  ];
+}).flat();
+const stem = `M ${cx + r * Math.cos((110 * Math.PI) / 180)} ${cy + r * Math.sin((110 * Math.PI) / 180)} A ${r} ${r} 0 0 1 ${cx + r * Math.cos((250 * Math.PI) / 180)} ${cy + r * Math.sin((250 * Math.PI) / 180)}`;
+---
+
+<div class="laurels" role="group" aria-label={`Award: ${title}, ${event}`}>
+  {
+    ['left', 'right'].map((side) => (
+      <svg class:list={['branch', `branch--${side}`]} viewBox="8 8 36 66" aria-hidden="true">
+        <path d={stem} fill="none" stroke="currentColor" stroke-width="0.8" />
+        {leaves.map((l) => (
+          <ellipse cx={l.x} cy={l.y} rx="4.6" ry="1.7" transform={`rotate(${l.rot} ${l.x} ${l.y})`} fill="currentColor" />
+        ))}
+      </svg>
+    ))
+  }
+  <div class="laurels__text" aria-hidden="true">
+    <span class="laurels__title">{title}</span>
+    <span class="laurels__event">{event}</span>
+  </div>
+</div>
+
+<style>
+  .laurels {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-ink);
+  }
+  .branch {
+    width: auto;
+    height: 3.25rem;
+    flex: none;
+  }
+  .branch--right {
+    order: 3;
+    transform: scaleX(-1);
+  }
+  .laurels__text {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 14ch;
+  }
+  .laurels__title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.1;
+  }
+  .laurels__event {
+    font-size: 0.625rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-top: 2px;
+  }
+  @media (max-width: 640px) {
+    .laurels {
+      gap: var(--space-1);
+    }
+    .branch {
+      height: 2.75rem;
+    }
+    .laurels__text {
+      max-width: 10ch;
+    }
+    .laurels__title {
+      font-size: 0.95rem;
+    }
+  }
+</style>

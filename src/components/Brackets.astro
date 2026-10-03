@@ -1,0 +1,44 @@
+---
+// Thin decorative corner marks. Place inside a positioned (relative) parent.
+type Corner = 'tl' | 'tr' | 'bl' | 'br';
+interface Props {
+  corners?: Corner[];
+}
+const { corners = ['tl', 'tr', 'bl', 'br'] } = Astro.props;
+---
+
+{corners.map((c) => <span class:list={['bracket', `bracket--${c}`]} aria-hidden="true" />)}
+
+<style>
+  .bracket {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 0 solid var(--color-ink);
+    pointer-events: none;
+  }
+  .bracket--tl {
+    top: 0;
+    left: 0;
+    border-top-width: 1px;
+    border-left-width: 1px;
+  }
+  .bracket--tr {
+    top: 0;
+    right: 0;
+    border-top-width: 1px;
+    border-right-width: 1px;
+  }
+  .bracket--bl {
+    bottom: 0;
+    left: 0;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+  }
+  .bracket--br {
+    bottom: 0;
+    right: 0;
+    border-bottom-width: 1px;
+    border-right-width: 1px;
+  }
+</style>

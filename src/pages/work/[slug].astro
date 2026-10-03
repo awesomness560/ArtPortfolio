@@ -1,0 +1,284 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PreviewMedia from '../../components/PreviewMedia.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Laurels from '../../components/Laurels.astro';
+import { toEmbedUrl } from '../../lib/embed';
+
+export async function getStaticPaths() {
+  const projects = (await getCollection('projects')).sort((a, b) => a.data.number - b.data.number);
+  return projects.map((project, i) => ({
+    params: { slug: project.id },
+    props: { project, next: projects[(i + 1) % projects.length] },
+  }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  next: CollectionEntry<'projects'>;
+}
+
+const { project, next } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+const num = String(data.number).padStart(2, '0');
+const stages = data.breakdownImages ?? [];
+---
+
+<BaseLayout title={data.title} image={data.poster}>
+  <article class="container project">
+    <header class="project__head">
+      <a class="label back" href="/#work"><span aria-hidden="true">←</span> All work</a>
+      <div class="project__head-grid">
+        <div>
+          <p class="label">{num} / {data.category}</p>
+          <h1 class="project__title">{data.title}</h1>
+        </div>
+        <dl class="facts">
+          <div><dt class="label">Category</dt><dd>{data.category}</dd></div>
+          <div><dt class="label">Year</dt><dd>{data.year}</dd></div>
+          {data.tools.length > 0 && <div><dt class="label">Tools</dt><dd>{data.tools.join(', ')}</dd></div>}
+        </dl>
+      </div>
+      {
+        (data.awards?.length || data.itchUrl) && (
+          <div class="project__extras">
+            {data.awards?.length && <div class="awards">{data.awards.map((a) => <Laurels {...a} />)}</div>}
+            {data.itchUrl && (
+              <a class="play" href={data.itchUrl} target="_blank" rel="noopener">
+                Play on itch.io <span aria-hidden="true">↗</span>
+                <span class="visually-hidden"> (opens in a new tab)</span>
+              </a>
+            )}
+          </div>
+        )
+      }
+    </header>
+
+    <div class="project__hero" transition:name={`media-${project.id}`}>
+      {
+        data.fullVideoUrl ? (
+          <iframe
+            src={toEmbedUrl(data.fullVideoUrl)}
+            title={`${data.title} (video)`}
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowfullscreen
+            loading="lazy"
+          />
+        ) : (
+          <PreviewMedia project={data} eager />
+        )
+      }
+    </div>
+
+    <div class="project__body">
+      <p class="label">Write-up</p>
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+
+    {
+      stages.length > 0 && (
+        <section class="breakdown" aria-labelledby="breakdown-heading">
+          <SectionHeading
+            id="breakdown-heading"
+            title="Breakdown"
+            counter={`${String(stages.length).padStart(2, '0')} Stages`}
+          />
+          <ol class="breakdown__grid">
+            {stages.map((img, i) => (
+              <li>
+                <figure>
+                  <img src={img.src} alt={img.alt} width="1280" height="720" loading="lazy" decoding="async" />
+                  <figcaption>
+                    <span class="label">{String(i + 1).padStart(2, '0')}</span> {img.caption}
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    <nav class="next" aria-label="Next project">
+      <p class="label">Next project</p>
+      <a class="next__link" href={`/work/${next.id}/`}>
+        <span>{next.data.title}</span>
+        <span class="accent" aria-hidden="true">→</span>
+      </a>
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .project {
+    padding-top: var(--space-7);
+  }
+  .back {
+    display: inline-block;
+    margin-bottom: var(--space-7);
+    transition: color var(--duration) var(--ease-out);
+  }
+  .back:hover {
+    color: var(--color-accent);
+  }
+  .project__head-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--space-6);
+  }
+  .project__title {
+    margin-top: var(--space-3);
+    font-size: clamp(2.75rem, 7vw, 5.5rem);
+    font-weight: 400;
+    line-height: 1;
+  }
+  .facts {
+    display: flex;
+    gap: var(--space-6);
+  }
+  .facts > div + div {
+    padding-left: var(--space-6);
+    border-left: var(--rule);
+  }
+  .facts dd {
+    margin-top: var(--space-1);
+  }
+  .project__extras {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+  .awards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5) var(--space-6);
+  }
+  .play {
+    display: inline-flex;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: var(--text-small);
+    letter-spacing: 0.04em;
+    transition:
+      background-color var(--duration) var(--ease-out),
+      color var(--duration) var(--ease-out);
+  }
+  .play:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+  .project__hero {
+    margin-top: var(--space-7);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-media);
+  }
+  .project__hero iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .project__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
+    gap: var(--space-6);
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: var(--rule);
+  }
+  .prose {
+    max-width: 65ch;
+  }
+  .prose :global(h2) {
+    font-size: 1.625rem;
+    margin: var(--space-6) 0 var(--space-3);
+  }
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .prose :global(p + p),
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin-top: var(--space-4);
+  }
+  .prose :global(a) {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+  .breakdown {
+    margin-top: var(--space-9);
+  }
+  .breakdown__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-7) var(--space-6);
+    padding: 0;
+    list-style: none;
+  }
+  .breakdown img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: var(--color-media);
+  }
+  figcaption {
+    margin-top: var(--space-3);
+    font-size: var(--text-small);
+  }
+  figcaption .label {
+    margin-right: var(--space-2);
+  }
+  .next {
+    margin-top: var(--space-9);
+    padding-top: var(--space-6);
+    border-top: var(--rule);
+  }
+  .next__link {
+    display: inline-flex;
+    gap: var(--space-4);
+    align-items: baseline;
+    margin-top: var(--space-3);
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+  }
+  .next__link .accent {
+    transition: transform var(--duration) var(--ease-out);
+  }
+  .next__link:hover .accent {
+    transform: translateX(6px);
+  }
+
+  @media (max-width: 800px) {
+    .project__head-grid,
+    .project__body {
+      grid-template-columns: 1fr;
+    }
+    .facts {
+      flex-wrap: wrap;
+      gap: var(--space-4) var(--space-5);
+    }
+    .facts > div + div {
+      padding-left: var(--space-5);
+    }
+    .breakdown__grid {
+      grid-template-columns: 1fr;
+    }
+    .awards {
+      gap: var(--space-4);
+    }
+  }
+</style>

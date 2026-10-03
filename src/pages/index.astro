@@ -1,17 +1,182 @@
 ---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Brackets from '../components/Brackets.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { site } from '../data/site';
 
+const projects = (await getCollection('projects')).sort((a, b) => a.data.number - b.data.number);
+// Regular projects fill the two-up row; featured ones follow at full width.
+const ordered = [...projects.filter((p) => !p.data.featured), ...projects.filter((p) => p.data.featured)];
+const counter = `${String(projects.length).padStart(2, '0')} ${projects.length === 1 ? 'Project' : 'Projects'}`;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout>
+  <section class="container hero-wrap" aria-labelledby="hero-name">
+    <div class="hero">
+      <Brackets />
+      <!--
+        Ambient motion layer, intentionally empty for now. Options for later:
+        a looping low-opacity <video>, a slow CSS gradient drift, or a React Three Fiber island
+        (npx astro add react). Hide it under prefers-reduced-motion.
+      -->
+      <div class="hero__ambient" aria-hidden="true"></div>
+      <div class="hero__content">
+        <div class="hero__id">
+          <h1 id="hero-name" class="hero__name">{site.name}</h1>
+          <p class="hero__subtitle">{site.subtitle}</p>
+        </div>
+        <p class="hero__tagline">
+          <span class="hero__tagline-rule" aria-hidden="true"></span>
+          {site.tagline}
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="work" class="container section" aria-labelledby="work-heading">
+    <SectionHeading id="work-heading" title="Selected work" counter={counter} />
+    <div class="work-grid">
+      {ordered.map((project) => <ProjectCard project={project} />)}
+    </div>
+  </section>
+
+  <section id="about" class="container section" aria-label="About">
+    <div class="info">
+      <div class="info__col">
+        <h2 class="info__heading">A little about me</h2>
+        <p>{site.bio}</p>
+      </div>
+      <div class="info__col">
+        <h2 class="info__heading">Skills</h2>
+        <ul>{site.skills.map((s) => <li>{s}</li>)}</ul>
+      </div>
+      <div class="info__col">
+        <h2 class="info__heading">Tools</h2>
+        <ul>{site.tools.map((t) => <li>{t}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero-wrap {
+    padding-top: var(--space-6);
+  }
+  .hero {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(var(--space-7), 10vw, var(--space-9)) clamp(var(--space-5), 5vw, var(--space-8));
+  }
+  .hero__ambient {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero__content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+    align-items: end;
+    gap: var(--space-7);
+  }
+  .hero__name {
+    font-size: clamp(3rem, 10vw, 7.5rem);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+  .hero__subtitle {
+    margin-top: var(--space-5);
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
+    font-style: italic;
+    color: var(--color-muted);
+  }
+  .hero__tagline {
+    display: flex;
+    gap: var(--space-4);
+    align-items: baseline;
+    font-size: var(--text-base);
+  }
+  .hero__tagline-rule {
+    flex: none;
+    width: 2rem;
+    height: 1px;
+    background: var(--color-accent);
+    transform: translateY(-0.3em);
+  }
+
+  /* ---------- Sections ---------- */
+  .section {
+    margin-top: var(--space-9);
+  }
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
+  }
+  .work-grid > :global(.card--featured) {
+    grid-column: 1 / -1;
+  }
+
+  /* ---------- Info row ---------- */
+  .info {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    border-block: var(--rule);
+  }
+  .info__col {
+    padding: var(--space-7) var(--space-6);
+  }
+  .info__col:first-child {
+    padding-left: 0;
+  }
+  .info__col:last-child {
+    padding-right: 0;
+  }
+  .info__col + .info__col {
+    border-left: var(--rule);
+  }
+  .info__heading {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-5);
+  }
+  .info__heading::after {
+    content: '';
+    display: block;
+    width: 1.75rem;
+    height: 1px;
+    margin-top: var(--space-3);
+    background: var(--color-accent);
+  }
+  .info ul {
+    padding: 0;
+    list-style: none;
+  }
+  .info li + li {
+    margin-top: var(--space-1);
+  }
+
+  @media (max-width: 800px) {
+    .hero__content {
+      grid-template-columns: 1fr;
+    }
+    .work-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-7);
+    }
+    .info {
+      grid-template-columns: 1fr;
+    }
+    .info__col {
+      padding-inline: 0;
+    }
+    .info__col + .info__col {
+      border-left: 0;
+      border-top: var(--rule);
+    }
+  }
+</style>

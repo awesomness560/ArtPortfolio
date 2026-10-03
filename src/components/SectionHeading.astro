@@ -1,0 +1,35 @@
+---
+interface Props {
+  title: string;
+  counter?: string;
+  id?: string;
+}
+const { title, counter, id } = Astro.props;
+---
+
+<div class="section-heading">
+  <h2 id={id}>{title}</h2>
+  <span class="section-heading__rule" aria-hidden="true"></span>
+  {counter && <span class="label">{counter}</span>}
+</div>
+
+<style>
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-bottom: var(--space-7);
+  }
+  h2 {
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    white-space: nowrap;
+  }
+  .section-heading__rule {
+    flex: 1;
+    height: 1px;
+    background: var(--color-rule);
+  }
+  .label {
+    white-space: nowrap;
+  }
+</style>

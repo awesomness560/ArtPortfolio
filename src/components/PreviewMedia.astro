@@ -1,0 +1,88 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+// Looping, muted preview. Uses video (webm/mp4) if given, otherwise a gif, otherwise the poster.
+// Videos load lazily and only play while on screen; under prefers-reduced-motion the poster is shown.
+interface Props {
+  project: CollectionEntry<'projects'>['data'];
+  eager?: boolean;
+}
+
+const { project, eager = false } = Astro.props;
+const { poster, posterAlt, preview, previewFit, previewBackdrop } = project;
+const hasVideo = Boolean(preview.webm || preview.mp4);
+const style = previewFit === 'contain' ? `object-fit: contain; background-color: ${previewBackdrop}` : undefined;
+---
+
+{
+  hasVideo ? (
+    <video
+      class="media"
+      style={style}
+      data-preview
+      muted
+      playsinline
+      loop
+      preload="none"
+      poster={poster}
+      aria-label={posterAlt}
+      disablepictureinpicture
+    >
+      {preview.webm && <source src={preview.webm} type="video/webm" />}
+      {preview.mp4 && <source src={preview.mp4} type="video/mp4" />}
+    </video>
+  ) : (
+    <picture>
+      {/* Gifs can't be paused, so reduced-motion viewers get the still poster instead. */}
+      {preview.gif && <source srcset={poster} media="(prefers-reduced-motion: reduce)" />}
+      <img
+        class="media"
+      style={style}
+        src={preview.gif ?? poster}
+        alt={posterAlt}
+        width="1280"
+        height="720"
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    </picture>
+  )
+}
+
+<style>
+  picture {
+    display: contents;
+  }
+  .media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--color-media);
+  }
+</style>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let observer: IntersectionObserver | undefined;
+
+  function setUp() {
+    observer?.disconnect();
+    const videos = document.querySelectorAll<HTMLVideoElement>('video[data-preview]');
+    if (!videos.length) return;
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const video = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting && !reduceMotion.matches) video.play().catch(() => {});
+          else video.pause();
+        }
+      },
+      { rootMargin: '200px 0px' },
+    );
+    videos.forEach((v) => observer!.observe(v));
+  }
+
+  document.addEventListener('astro:page-load', setUp);
+  reduceMotion.addEventListener('change', setUp);
+</script>
