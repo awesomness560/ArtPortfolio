@@ -18,16 +18,10 @@ preview:
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
-*Example: Recreate the soft, painterly lighting of an anime background using render passes and Blender's compositor.*
-
 ## What I learned
 
 Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse.
 
-*Example: Separating the shadow and rim-light passes let me tune the mood after rendering instead of re-rendering every tweak.*
-
 ## Time spent
 
 Lorem ipsum: roughly N weeks, part-time.
-
-*Example: About 2 weeks, roughly 25 hours including render time.*

@@ -26,6 +26,8 @@ const projects = defineCollection({
       })
       .nullish()
       .transform((v) => v ?? {}), // An empty `preview:` key (all lines commented out) is fine.
+    /** Frame rate of the preview clip; the project page scrubber steps one frame per arrow key. */
+    previewFps: z.number().positive().default(24),
     /** "contain" letterboxes the clip instead of cropping it (e.g. vertical or non-16:9 footage). */
     previewFit: z.enum(['cover', 'contain']).default('cover'),
     /** Color of the letterbox bars when previewFit is "contain". Match the clip's background. */

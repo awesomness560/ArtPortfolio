@@ -57,6 +57,7 @@ preview:                       # all optional; video is preferred over gif
   # gif: /projects/my-new-project/preview.gif
 previewFit: contain            # optional: letterbox instead of crop (vertical / non-16:9 clips)
 previewBackdrop: "#000"        # optional: letterbox bar color, match the clip's background
+previewFps: 24                 # optional (default 24): lets arrow keys on the scrubber step one frame
 fullVideoUrl: https://youtu.be/VIDEO_ID   # optional, YouTube or Vimeo (unlisted is fine)
 featured: false                # true = full-width card
 awards:                        # optional, real awards only
@@ -79,15 +80,15 @@ itchUrl: https://you.itch.io/game   # optional
 …
 ```
 
-The home grid shows non-featured projects two per row, then the featured project(s) at full width. With no `fullVideoUrl`, the project page shows the preview loop (or the poster) in its place.
+The home grid shows non-featured projects two per row, then the featured project(s) at full width. With no `fullVideoUrl`, the project page shows the preview clip with a scrubber (play/pause, drag to seek, arrow keys step frames), or the poster/gif if there's no video.
 
 ### Preview loops
 
-Raw clips live in `vidsRaw/` (git-ignored). Short, muted, looping, ~720p, a few MB at most. Video is much smaller than gif for the same clip, so use video when you can. Example with ffmpeg:
+Raw clips live in `vidsRaw/` (git-ignored). Short, muted, looping, ~720p, a few MB at most. Video is much smaller than gif for the same clip, so use video when you can. Example with ffmpeg (`-g 12` puts a keyframe every half second so scrubbing stays smooth):
 
 ```sh
-ffmpeg -i render.mov -t 6 -vf "scale=1280:-2,fps=24" -an -c:v libvpx-vp9 -b:v 0 -crf 38 preview.webm
-ffmpeg -i render.mov -t 6 -vf "scale=1280:-2,fps=24" -an -c:v libx264 -crf 26 -preset slow -movflags +faststart -pix_fmt yuv420p preview.mp4
+ffmpeg -i render.mov -t 6 -vf "scale=1280:-2,fps=24" -g 12 -an -c:v libvpx-vp9 -b:v 0 -crf 36 preview.webm
+ffmpeg -i render.mov -t 6 -vf "scale=1280:-2,fps=24" -g 12 -an -c:v libx264 -crf 25 -preset slow -movflags +faststart -pix_fmt yuv420p preview.mp4
 ```
 
 Grab a poster frame (here at 3s) with:

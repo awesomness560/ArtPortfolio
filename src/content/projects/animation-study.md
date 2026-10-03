@@ -21,16 +21,10 @@ preview:
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
-*Example: Practice a convincing weight shift and follow-through in a short character turn, using stepped-to-spline blocking.*
-
 ## What I learned
 
 Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse.
 
-*Example: Spacing matters more than poses. Easing the hair and skirt a few frames behind the body sold the motion far more than adding keys.*
-
 ## Time spent
 
 Lorem ipsum: roughly N weeks, part-time.
-
-*Example: About 3 weeks of evenings, around 40 hours.*

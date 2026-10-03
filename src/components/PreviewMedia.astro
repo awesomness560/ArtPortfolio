@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { hasVideo as projectHasVideo, mediaStyle } from '../lib/media';
 
 // Looping, muted preview. Uses video (webm/mp4) if given, otherwise a gif, otherwise the poster.
 // Videos load lazily and only play while on screen; under prefers-reduced-motion the poster is shown.
@@ -9,9 +10,9 @@ interface Props {
 }
 
 const { project, eager = false } = Astro.props;
-const { poster, posterAlt, preview, previewFit, previewBackdrop } = project;
-const hasVideo = Boolean(preview.webm || preview.mp4);
-const style = previewFit === 'contain' ? `object-fit: contain; background-color: ${previewBackdrop}` : undefined;
+const { poster, posterAlt, preview } = project;
+const hasVideo = projectHasVideo(project);
+const style = mediaStyle(project);
 ---
 
 {

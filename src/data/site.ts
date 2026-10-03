@@ -18,11 +18,11 @@ export const site = {
   // Example: "I'm a self-taught 3D artist who fell in love with anime-style rendering.
   // Most of my time goes into toon shading, character animation, and figuring out
   // how lighting can make a flat-shaded scene feel alive."
-  bio: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.',
+  bio: 'I\'m a self taught 3d artist who loves anime style rendering. I spend most of my time learning how to make a 3d scene feel stylized and polished.',
 
   // TODO: confirm these lists.
   skills: ['Toon shading', 'Character animation', 'Lighting', 'Compositing', 'Game dev'],
-  tools: ['Blender', 'TODO: tool', 'TODO: tool'],
+  tools: ['Blender', 'Davinci Resolve'],
 
   email: 'tartiverse@gmail.com',
   // TODO: your X profile URL.

@@ -1,0 +1,261 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { mediaStyle } from '../lib/media';
+
+// Preview clip with a minimal custom scrubber, used on project pages.
+// Plays muted on load (unless the viewer prefers reduced motion); click the video or the
+// button to pause, drag the timeline to scrub, arrow keys on the timeline step one frame.
+interface Props {
+  project: CollectionEntry<'projects'>['data'];
+  transitionName: string;
+}
+
+const { project, transitionName } = Astro.props;
+const { poster, posterAlt, preview, previewFps } = project;
+---
+
+<div class="player" data-player data-fps={previewFps} data-state="paused">
+  <div class="player__frame" transition:name={transitionName}>
+    <video
+      class="player__video"
+      style={mediaStyle(project)}
+      muted
+      playsinline
+      loop
+      preload="auto"
+      poster={poster}
+      aria-label={posterAlt}
+      disablepictureinpicture
+    >
+      {preview.webm && <source src={preview.webm} type="video/webm" />}
+      {preview.mp4 && <source src={preview.mp4} type="video/mp4" />}
+    </video>
+  </div>
+
+  <div class="player__controls">
+    <button class="player__toggle" type="button" aria-label="Play">
+      <svg class="icon icon--play" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1.5v9l8-4.5z" /></svg>
+      <svg class="icon icon--pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1.5h2.5v9H2.5zM7 1.5h2.5v9H7z" /></svg>
+    </button>
+    <input class="player__seek" type="range" min="0" max="0" step="any" value="0" aria-label="Seek" />
+    <span class="player__time label" aria-hidden="true">0:00 / 0:00</span>
+  </div>
+</div>
+
+<style>
+  .player__frame {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-media);
+  }
+  .player__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+  }
+
+  .player__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+  }
+
+  .player__toggle {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--color-rule);
+    background: none;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition:
+      border-color var(--duration) var(--ease-out),
+      color var(--duration) var(--ease-out);
+  }
+  .player__toggle:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  .icon {
+    width: 0.625rem;
+    height: 0.625rem;
+    fill: currentColor;
+  }
+  [data-state='playing'] .icon--play,
+  [data-state='paused'] .icon--pause {
+    display: none;
+  }
+
+  /* Timeline: a 1px rule with the played part in the accent color and a thin bar as the handle. */
+  .player__seek {
+    --progress: 0%;
+    flex: 1;
+    min-width: 0;
+    height: 1.25rem;
+    margin: 0;
+    background: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .player__seek::-webkit-slider-runnable-track {
+    height: 1px;
+    background:
+      linear-gradient(var(--color-accent), var(--color-accent)) 0 0 / var(--progress) 100% no-repeat,
+      var(--color-rule);
+  }
+  .player__seek::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 3px;
+    height: 0.875rem;
+    margin-top: calc(-0.4375rem + 0.5px);
+    border: 0;
+    border-radius: 0;
+    background: var(--color-accent);
+  }
+  .player__seek::-moz-range-track {
+    height: 1px;
+    background: var(--color-rule);
+  }
+  .player__seek::-moz-range-progress {
+    height: 1px;
+    background: var(--color-accent);
+  }
+  .player__seek::-moz-range-thumb {
+    width: 3px;
+    height: 0.875rem;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-accent);
+  }
+  .player__seek:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .player__time {
+    flex: none;
+    min-width: 7.5em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player__toggle {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let cleanups: Array<() => void> = [];
+
+  const format = (seconds: number) => {
+    const s = Math.floor(seconds || 0);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  };
+
+  function setUp(root: HTMLElement) {
+    const video = root.querySelector('video')!;
+    const toggle = root.querySelector<HTMLButtonElement>('.player__toggle')!;
+    const seek = root.querySelector<HTMLInputElement>('.player__seek')!;
+    const time = root.querySelector<HTMLElement>('.player__time')!;
+
+    // One arrow-key press = one frame.
+    seek.step = String(1 / (Number(root.dataset.fps) || 24));
+
+    let frame = 0;
+    let scrubbing = false;
+    let resumeAfterScrub = false;
+
+    const render = () => {
+      const duration = video.duration || 0;
+      const current = video.currentTime;
+      if (!scrubbing) seek.value = String(current);
+      seek.style.setProperty('--progress', duration ? `${(current / duration) * 100}%` : '0%');
+      time.textContent = `${format(current)} / ${format(duration)}`;
+      seek.setAttribute('aria-valuetext', `${format(current)} of ${format(duration)}`);
+    };
+
+    // Smooth progress while playing; timeupdate alone only fires a few times a second.
+    const tick = () => {
+      render();
+      frame = requestAnimationFrame(tick);
+    };
+
+    const syncState = () => {
+      const playing = !video.paused;
+      root.dataset.state = playing ? 'playing' : 'paused';
+      toggle.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+      cancelAnimationFrame(frame);
+      if (playing) tick();
+      else render();
+    };
+
+    const onMetadata = () => {
+      seek.max = String(video.duration);
+      render();
+    };
+
+    const togglePlay = () => {
+      if (video.paused) video.play().catch(() => {});
+      else video.pause();
+    };
+
+    const startScrub = () => {
+      if (scrubbing) return;
+      scrubbing = true;
+      resumeAfterScrub = !video.paused;
+      video.pause();
+    };
+
+    const endScrub = () => {
+      if (!scrubbing) return;
+      scrubbing = false;
+      if (resumeAfterScrub) video.play().catch(() => {});
+    };
+
+    // Stepping frame by frame only makes sense on a still image.
+    const onSeekKey = (e: KeyboardEvent) => {
+      if (/^(Arrow|Page|Home|End)/.test(e.key)) video.pause();
+    };
+
+    const onSeekInput = () => {
+      video.currentTime = Number(seek.value);
+      render();
+    };
+
+    video.addEventListener('loadedmetadata', onMetadata);
+    video.addEventListener('play', syncState);
+    video.addEventListener('pause', syncState);
+    video.addEventListener('seeked', render);
+    video.addEventListener('click', togglePlay);
+    toggle.addEventListener('click', togglePlay);
+    seek.addEventListener('pointerdown', startScrub);
+    seek.addEventListener('keydown', onSeekKey);
+    seek.addEventListener('input', onSeekInput);
+    seek.addEventListener('change', endScrub);
+    window.addEventListener('pointerup', endScrub);
+
+    if (video.readyState >= 1) onMetadata();
+    if (!reduceMotion.matches) video.play().catch(() => {});
+
+    cleanups.push(() => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('pointerup', endScrub);
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-player]').forEach(setUp);
+  });
+  document.addEventListener('astro:before-swap', () => {
+    cleanups.forEach((fn) => fn());
+    cleanups = [];
+  });
+</script>

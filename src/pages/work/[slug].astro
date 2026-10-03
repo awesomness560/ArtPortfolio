@@ -4,7 +4,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PreviewMedia from '../../components/PreviewMedia.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import Laurels from '../../components/Laurels.astro';
+import VideoPlayer from '../../components/VideoPlayer.astro';
 import { toEmbedUrl } from '../../lib/embed';
+import { hasVideo } from '../../lib/media';
 
 export async function getStaticPaths() {
   const projects = (await getCollection('projects')).sort((a, b) => a.data.number - b.data.number);
@@ -24,6 +26,7 @@ const { data } = project;
 const { Content } = await render(project);
 const num = String(data.number).padStart(2, '0');
 const stages = data.breakdownImages ?? [];
+const mediaName = `media-${project.id}`;
 ---
 
 <BaseLayout title={data.title} image={data.poster}>
@@ -56,18 +59,24 @@ const stages = data.breakdownImages ?? [];
       }
     </header>
 
-    <div class="project__hero" transition:name={`media-${project.id}`}>
+    <div class="project__media">
       {
         data.fullVideoUrl ? (
-          <iframe
-            src={toEmbedUrl(data.fullVideoUrl)}
-            title={`${data.title} (video)`}
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            allowfullscreen
-            loading="lazy"
-          />
+          <div class="project__hero" transition:name={mediaName}>
+            <iframe
+              src={toEmbedUrl(data.fullVideoUrl)}
+              title={`${data.title} (video)`}
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              allowfullscreen
+              loading="lazy"
+            />
+          </div>
+        ) : hasVideo(data) ? (
+          <VideoPlayer project={data} transitionName={mediaName} />
         ) : (
-          <PreviewMedia project={data} eager />
+          <div class="project__hero" transition:name={mediaName}>
+            <PreviewMedia project={data} eager />
+          </div>
         )
       }
     </div>
@@ -177,8 +186,10 @@ const stages = data.breakdownImages ?? [];
     background: var(--color-accent);
     color: var(--color-bg);
   }
-  .project__hero {
+  .project__media {
     margin-top: var(--space-7);
+  }
+  .project__hero {
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--color-media);
